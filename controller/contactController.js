@@ -6,30 +6,34 @@ const createContactDetails = async(req,res) =>{
 
         const {role,email,firstname,lastname,phone} = req.body;
 
-        const isAlreadyExist = await contactModel.findOne({email:email});
+        let contact = await contactModel.findOne({ email });
 
-        console.log("isaleady : ", isAlreadyExist)
-        if(isAlreadyExist)
-        {
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                success : false,
-                message : "already registered with given email",
+        if (contact) {
+            contact.entries.push({ firstname, lastname, role, phone });
+            const contactData = await contact.save();
+
+            return res.status(StatusCodes.OK).json({
+                success : true,
+                message : "successfully contact details created",
+                data : contactData
             })
-        }
-        console.log("kkk")
+
+        } 
 
 
-        const contactData = await contactModel.create({
-            firstname,lastname,email,phone,role
-        })
+            contact = new contactModel({
+                email,
+                entries: [{ firstname, lastname, role, phone }],
+            });
+            const contactData = await contact.save();
 
-      
+            return res.status(StatusCodes.OK).json({
+                success : true,
+                message : "successfully contact details created",
+                data : contactData
+            })
+        
 
-        return res.status(StatusCodes.OK).json({
-            success : true,
-            message : "successfully contact details created",
-            data : contactData
-        })
     }
     catch(error){
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -41,50 +45,69 @@ const createContactDetails = async(req,res) =>{
 }
 
 
-const getlearnerContact = async(req,res) =>{
-    try{
 
-        const learners = await contactModel.find({ role: 'learner' }, );
 
+
+const getlearnerContact = async (req, res) => {
+    try {
+        // Fetch documents where 'learner' is one of the roles in the entries
+        const learners = await contactModel.find({
+            'entries.role': 'learner',
+        });
+
+        console.log("lerner : " + learners)
+
+        // Flatten the array to return only the entries where the role is 'learner'
+        const learnerEntries = learners.flatMap(contact =>
+            contact.entries.filter(entry => entry.role === 'learner')
+        );
 
         return res.status(StatusCodes.OK).json({
-            success : true,
-            message : "succefully completed the request",
-            count : learners.length,          
-            data : learners
-        })
-    }
-    catch(error){
+            success: true,
+            message: "Successfully completed the request",
+            count: learnerEntries.length,
+            data: learnerEntries,
+        });
+    } catch (error) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            success : false,
-            message : "something went wrong",
-            error : error
-        })
+            success: false,
+            message: "Something went wrong",
+            error: error.message,
+        });
     }
-}
+};
+
+
+
+
 
 
 
 
 const getDeveloperContact = async(req,res) =>{
-    try{
+    try {
+        const developers = await contactModel.find({
+            'entries.role': 'developer',
+        });
 
-        const devs = await contactModel.find({ role: 'developer' }, );
+        console.log("developer : " + developers)
 
+        const developerEntries = developers.flatMap(contact =>
+            contact.entries.filter(entry => entry.role === 'developer')
+        );
 
         return res.status(StatusCodes.OK).json({
-            success : true,
-            count : devs.length,
-            message : "succefully completed the request",
-            data : devs
-        })
-    }
-    catch(error){
+            success: true,
+            message: "Successfully completed the request",
+            count: developerEntries.length,
+            data: developerEntries,
+        });
+    } catch (error) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            success : false,
-            message : "something went wrong",
-            error : error
-        })
+            success: false,
+            message: "Something went wrong",
+            error: error.message,
+        });
     }
 }
 

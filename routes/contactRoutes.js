@@ -7,7 +7,8 @@ import {createContactDetails,getDeveloperContact,getlearnerContact} from '../con
 
 
 router.post("/create",createContactDetails)
-router.get("/learner",getDeveloperContact)
-router.get("/developer",getlearnerContact)
+router.get("/learner",getlearnerContact)
+router.get("/developer",getDeveloperContact)
+
 
 export default router
